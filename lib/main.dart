@@ -3,26 +3,27 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'package:walarm/home_page.dart';
+
+const double stdPadding = 5;
+
+void main() async {
+  runApp(App());
+  await AndroidAlarmManager.initialize();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class App extends StatefulWidget {
+  App({Key? key}) : super(key: key);
 
   @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Welcome to Flutter',
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Welcome to Flutter'),
-        ),
-        body: const Center(
-          child: Text('Hello World'),
-        ),
-      ),
-    );
+    return MaterialApp(home: HomePage());
   }
 }
