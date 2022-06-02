@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class AlarmList {
   List<Alarm> _alarmList = List<Alarm>.empty(growable: true);
@@ -97,20 +98,32 @@ class AlarmList {
 }
 
 class Alarm {
-  // ignore: prefer_final_fields
-  DateTime _time = DateTime.now();
+  DateTime time = DateTime.now();
+  // TODO: change to something more apropriate instead of milisecondsSinceEpoch
+  int id = 0;
 
-  Alarm(String timeString) : _time = DateTime.tryParse(timeString) as DateTime;
+  Alarm(String timeString) {
+    time = DateTime.tryParse(timeString) as DateTime;
+    id = time.millisecondsSinceEpoch % 1000000000;
+  }
 
-  Alarm.fromDateTime(DateTime date) : _time = date;
-  Alarm.fromAlarm(Alarm alarm) : _time = alarm._time;
+  Alarm.fromDateTime(DateTime date) {
+    time = date;
+    id = time.millisecondsSinceEpoch % 1000000000;
+  }
+
+  Alarm.fromAlarm(Alarm alarm) {
+    time = alarm.time;
+    id = time.millisecondsSinceEpoch % 1000000000;
+  }
 
   Alarm.fromJson(Map<String, dynamic> json)
-      : _time = DateTime.tryParse(json['time']) as DateTime;
-  Map<String, dynamic> toJson() => {'time': _time.toString()};
+      : time = DateTime.tryParse(json['time']) as DateTime,
+        id = json['id'];
+  Map<String, dynamic> toJson() => {'time': time.toString(), 'id': id};
 
   @override
-  String toString() => DateFormat.Hm().format(_time);
+  String toString() => DateFormat.Hm().format(time);
 
-  int compareTo(Alarm other) => _time.compareTo(other._time);
+  int compareTo(Alarm other) => time.compareTo(other.time);
 }

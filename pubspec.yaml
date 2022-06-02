@@ -33,6 +33,7 @@ dependencies:
   android_alarm_manager_plus: ^2.0.5
   path_provider: ^2.0.10
   intl: ^0.17.0
+  uuid: ^3.0.6
 
 dev_dependencies:
   flutter_test:

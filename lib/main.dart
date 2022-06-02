@@ -11,7 +11,6 @@ const double stdPadding = 5;
 
 void main() async {
   runApp(App());
-  await AndroidAlarmManager.initialize();
 }
 
 class App extends StatefulWidget {

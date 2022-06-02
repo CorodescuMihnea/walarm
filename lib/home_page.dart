@@ -1,8 +1,12 @@
+import 'dart:isolate';
+import 'dart:ui';
+
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import 'package:walarm/alarm_list.dart';
+
+const String portName = "MyAppPort";
 
 class HomePage extends StatefulWidget {
   @override
@@ -11,6 +15,18 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   AlarmList _alarmList = AlarmList();
+  ReceivePort receivePort = ReceivePort();
+
+  @override
+  void initState() {
+    IsolateNameServer.registerPortWithName(receivePort.sendPort, portName);
+    AndroidAlarmManager.initialize();
+    receivePort.listen((v) {
+      print(v);
+    });
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,8 +72,14 @@ class _HomePageState extends State<HomePage> {
         var day = now.day;
         if (now.hour > timeOfDay.hour) day += 1;
 
-        _alarmList.add(Alarm.fromDateTime(DateTime(
-            now.year, now.month, day, timeOfDay.hour, timeOfDay.minute)));
+        var newAlarm = Alarm.fromDateTime(DateTime(
+            now.year, now.month, day, timeOfDay.hour, timeOfDay.minute));
+        _alarmList.add(newAlarm);
+
+        var scheduledOk = await AndroidAlarmManager.oneShotAt(
+            newAlarm.time, newAlarm.id, alarmCallback,
+            wakeup: true, exact: true);
+        print('Alarm scheduledOk: $scheduledOk');
 
         await _alarmList.saveToPersistence();
         setState(() {});
@@ -74,16 +96,24 @@ class _HomePageState extends State<HomePage> {
           child:
               Card(child: ListTile(title: Text(_alarmList[index].toString()))),
           onDismissed: (direction) async {
+            AndroidAlarmManager.cancel(_alarmList[index].id);
             _alarmList.removeAt(index);
-            await _alarmList.saveToPersistence();
-
-            setState(() {});
 
             ScaffoldMessenger.of(context)
                 .showSnackBar(const SnackBar(content: Text("Alarm dismissed")));
+
+            await _alarmList.saveToPersistence();
+            setState(() {});
           },
         );
       },
     );
+  }
+
+  void alarmCallback() {
+    SendPort? sendPort = IsolateNameServer.lookupPortByName(portName);
+    if (sendPort != null) {
+      sendPort.send("Nice cbk triggered");
+    }
   }
 }
