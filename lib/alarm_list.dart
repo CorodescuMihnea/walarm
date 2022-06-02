@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class AlarmList {
@@ -54,13 +55,15 @@ class AlarmList {
     _alarmList.remove(alarm);
   }
 
-  void saveToPersistence() async {
+  Future<File> saveToPersistence() async {
     final file = await getPersistenceFile();
 
     String stringJson = jsonEncode(this);
     print('Dumping to file');
     print(stringJson);
     file.writeAsString(stringJson);
+
+    return file;
   }
 
   static Future<AlarmList> loadFromPersistence() async {
@@ -107,7 +110,7 @@ class Alarm {
   Map<String, dynamic> toJson() => {'time': _time.toString()};
 
   @override
-  String toString() => _time.toString();
+  String toString() => DateFormat.Hm().format(_time);
 
   int compareTo(Alarm other) => _time.compareTo(other._time);
 }

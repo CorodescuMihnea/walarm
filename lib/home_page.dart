@@ -14,15 +14,22 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    AlarmList.loadFromPersistence().then((value) {
-      _alarmList = value;
-    });
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Walarm')),
-      floatingActionButton: _createAddAlarmButton(context),
-      body: _createHomePageBody(),
-    );
+        appBar: AppBar(title: const Text('Walarm')),
+        floatingActionButton: _createAddAlarmButton(context),
+        body: FutureBuilder(
+          future: AlarmList.loadFromPersistence(),
+          builder: (BuildContext context, AsyncSnapshot<AlarmList> alarmList) {
+            if (!alarmList.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+            _alarmList = alarmList.data as AlarmList;
+
+            return _createHomePageBody();
+          },
+        ));
   }
 
   Widget _createAddAlarmButton(BuildContext context) {
@@ -43,18 +50,17 @@ class _HomePageState extends State<HomePage> {
       );
 
       if (timeOfDay != null) {
-        setState(() {
-          final now = DateTime.now();
+        final now = DateTime.now();
 
-          // If the hour is in the past for today set alarm for tmrw
-          var day = now.day;
-          if (now.hour > timeOfDay.hour) day += 1;
+        // If the hour is in the past for today set alarm for tmrw
+        var day = now.day;
+        if (now.hour > timeOfDay.hour) day += 1;
 
-          _alarmList.add(Alarm.fromDateTime(DateTime(
-              now.year, now.month, day, timeOfDay.hour, timeOfDay.minute)));
+        _alarmList.add(Alarm.fromDateTime(DateTime(
+            now.year, now.month, day, timeOfDay.hour, timeOfDay.minute)));
 
-          _alarmList.saveToPersistence();
-        });
+        await _alarmList.saveToPersistence();
+        setState(() {});
       }
     };
   }
@@ -67,11 +73,11 @@ class _HomePageState extends State<HomePage> {
           key: UniqueKey(),
           child:
               Card(child: ListTile(title: Text(_alarmList[index].toString()))),
-          onDismissed: (direction) {
-            setState(() {
-              _alarmList.removeAt(index);
-              _alarmList.saveToPersistence();
-            });
+          onDismissed: (direction) async {
+            _alarmList.removeAt(index);
+            await _alarmList.saveToPersistence();
+
+            setState(() {});
 
             ScaffoldMessenger.of(context)
                 .showSnackBar(const SnackBar(content: Text("Alarm dismissed")));
