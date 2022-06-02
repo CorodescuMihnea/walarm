@@ -21,7 +21,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Walarm')),
       floatingActionButton: _createAddAlarmButton(context),
-      body: HomePageBody(),
+      body: _createHomePageBody(),
     );
   }
 
@@ -58,24 +58,8 @@ class _HomePageState extends State<HomePage> {
       }
     };
   }
-}
 
-class HomePageBody extends StatefulWidget {
-  HomePageBody({Key? key}) : super(key: key);
-
-  @override
-  _HomePageBodyState createState() => _HomePageBodyState();
-}
-
-class _HomePageBodyState extends State<HomePageBody> {
-  AlarmList _alarmList = AlarmList();
-
-  @override
-  Widget build(BuildContext context) {
-    AlarmList.loadFromPersistence().then((value) {
-      _alarmList = value;
-    });
-
+  Widget _createHomePageBody() {
     return ListView.builder(
       itemCount: _alarmList.length,
       itemBuilder: (context, index) {
@@ -85,11 +69,8 @@ class _HomePageBodyState extends State<HomePageBody> {
               Card(child: ListTile(title: Text(_alarmList[index].toString()))),
           onDismissed: (direction) {
             setState(() {
-              AlarmList.loadFromPersistence().then((value) {
-                _alarmList = value;
-                _alarmList.removeAt(index);
-                _alarmList.saveToPersistence();
-              });
+              _alarmList.removeAt(index);
+              _alarmList.saveToPersistence();
             });
 
             ScaffoldMessenger.of(context)
